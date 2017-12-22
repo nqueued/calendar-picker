@@ -1,0 +1,64 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="q-calendar-picker-header.html">
+<link rel="import" href="q-calendar.html">
+<link rel="import" href="../app-layout/app-grid/app-grid-style.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
+<script src="../moment/moment.js"></script>
+
+<dom-module id="q-calendar-picker">
+  <!-- Defines the element's style and local DOM -->
+  <template>
+    <style include="app-grid-style iron-flex iron-flex-alignment">
+       :host {
+        display: block;
+        --app-grid-columns: 7;
+        --app-grid-expandible-item-columns: 7;
+        text-align: center;
+      }
+    </style>
+    <q-calendar-picker-header date={{date}} min-date=[[minDate]] max-date=[[maxDate]] on-next="handleNextMonth" on-previous="handlePreviousMonth"></q-calendar-picker-header>
+    <q-calendar date={{date}} disable-weekends=[[disableWeekends]] holidays=[[holidays]] on-selected="handleDaySelected"></q-calendar>
+  </template>
+  <!-- Creates the element's prototype and registers it -->
+  <script>
+    class QCalendarPicker extends Polymer.Element {
+      static get is() { return 'q-calendar-picker'; }
+      static get properties() {
+        return {
+          holidays: {
+            type: Array,
+            value: []
+          },
+          date: {
+            type: Object,
+            value: moment.utc().startOf('date'),
+            notify: true
+          },
+          minDate: {
+            type: Object,
+            value: moment.utc().startOf('date')
+          },
+          maxDate: {
+            type: Object,
+            value: moment.utc().startOf('date')
+          },
+          disableWeekends: Boolean
+        }
+      }
+      handlePreviousMonth() {
+        this.date = moment.utc(this.date).subtract(1, 'month');
+        this.dispatchEvent(new CustomEvent('month-changed', { bubble: true, composed: true, detail: { month: this.date } }));
+      }
+      handleNextMonth() {
+        this.date = moment.utc(this.date).add(1, 'month');
+        this.dispatchEvent(new CustomEvent('month-changed', { bubble: true, composed: true, detail: { month: this.date } }));
+      }
+      handleDaySelected(e) {
+        this.date = moment.utc(e.detail.date);
+        this.dispatchEvent(new CustomEvent('day-selected', { bubble: true, composed: true, detail: e.detail }));
+      }
+    }
+    customElements.define(QCalendarPicker.is, QCalendarPicker);
+  </script>
+</dom-module>

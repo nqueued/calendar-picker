@@ -1,0 +1,47 @@
+<link rel="import" href="../polymer/polymer.html">
+<script src="../moment/moment.js"></script>
+
+<script>
+  /**
+    * @polymer
+    * @mixinFunction
+    */
+  const QCalendarMixin = Polymer.dedupingMixin(superClass => {
+    /**
+      * @polymer
+      * @mixinClass
+      * @implements {QCalendarMixin}
+      */
+    class QCalendarMixinImpl extends superClass {
+      formatDate(date, format) {
+        return this.toMoment(date).format(format);
+      }
+      asMonth(date) {
+        return this.toMoment(date).startOf('month');
+      }
+      asDay(date) {
+        return this.toMoment(date).startOf('date');
+      }
+      getDaysInMonth(date) {
+        return this.toMoment(date).daysInMonth();
+      }
+      getWeekday(date) {
+        return this.toMoment(date).day();
+      }
+      getDay(date) {
+        return this.toMoment(date).date();
+      }
+      isWeekend(date) {
+        return this.getWeekday(date) % 6 == 0;
+      }
+      toMoment(date) {
+        return moment.utc(date);
+      }
+      toLocalMoment(date) {
+        return moment(date);
+      }
+    }
+    return QCalendarMixinImpl;
+  });
+
+</script>

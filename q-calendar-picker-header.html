@@ -1,0 +1,98 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../app-layout/app-grid/app-grid-style.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<script src="../moment/moment.js"></script>
+
+<dom-module id="q-calendar-picker-header">
+  <!-- Defines the element's style and local DOM -->
+  <template>
+    <style include="app-grid-style iron-flex iron-flex-alignment">
+      :host {
+        display: block;
+        --app-grid-columns: 7;
+        --app-grid-expandible-item-columns: 7;              
+        font-weight: bold;
+        text-align: center;
+      }
+      [header] {
+          @apply --paper-font-headline;
+          padding: 4px 0px;
+      }
+      .app-grids div {
+          border-left: solid 1px #dddddd;
+          border-right: solid 1px #dddddd;
+      }
+      .app-grid {
+          border-top: solid 1px #212121;
+          line-height: 36px;
+          vertical-align: middle;
+          font-weight: normal;
+      }
+      paper-icon-button {
+          height: 40px;
+          width: 40px;
+      }
+    </style>
+    <div class="layout horizontal center-center" header>
+        <paper-icon-button icon="chevron-left" on-tap="onPrevious"></paper-icon-button>
+        <div class="flex">{{getMonth(date)}}</div>
+        <paper-icon-button icon="chevron-right" on-tap="onNext"></paper-icon-button>
+    </div>
+    <div class='app-grid layout center-center'>
+        <template is='dom-repeat' items={{weekdays}}>
+            <div>[[item]]</div>
+        </template>
+    </div>
+  </template>
+  <!-- Creates the element's prototype and registers it -->
+  <script>
+    class QCalendarPickerHeader extends Polymer.Element {
+      static get is() { return 'q-calendar-picker-header'; }
+
+      static get properties() {
+          return {
+              date: {
+                  value: moment.utc()
+              },
+              minDate: {
+                  value: moment.utc()
+              },
+              maxDate: Object,
+              dateFormat: {
+                type: String,
+                value: "MMMM, YYYY"
+              },
+              weekdays: {
+                  type: Array,
+                  value: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+                  readOnly: true
+              }
+          }
+      }
+
+      getMonth(date) {
+        return moment(date).format(this.dateFormat);
+      }
+      isPreviousDisabled(d) {
+        return !!this.minDate && this.date.subtract('month', 1).isBefore(this.minDate)
+      }
+      isNextDisabled(d) {
+        return !!this.maxDate && this.date.add('month', 1).isAfter(this.maxDate)
+      }
+      onPrevious(e) {
+        if (!this.isPreviousDisabled(this.date)) {
+          this.dispatchEvent(new CustomEvent('previous', {bubbles: true, compose: true}));
+        }
+      }
+      onNext(e) {
+        if (!this.isNextDisabled(this.date)) {
+          this.dispatchEvent(new CustomEvent('next', {bubbles: true, compose: true}));
+        }
+      }
+    }
+
+    customElements.define(QCalendarPickerHeader.is, QCalendarPickerHeader);
+  </script>
+</dom-module>

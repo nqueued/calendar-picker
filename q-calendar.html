@@ -1,0 +1,124 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../app-layout/app-grid/app-grid-style.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="q-calendar-mixin.html">
+<script src="../moment/moment.js"></script>
+
+<dom-module id="q-calendar">
+  <template>
+    <style include="app-grid-style iron-flex iron-flex-alignment">
+      :host {
+        display: block;
+        --app-grid-columns: 7;
+        --app-grid-expandible-item-columns: 7;              
+        font-weight: bold;
+        text-align: center;
+      }
+      [day] {
+        border-radius: 20px;
+        min-width: 36px;
+        width: 36px;
+        height: 36px;
+        margin: 2px;        
+      }
+      [selected] {
+        font-weight: bold;
+        background: var(--paper-blue-600);
+      }
+      [day]:hover {
+        background: var(--paper-blue-300);
+      }
+      [disabled], [disabled]:hover {
+        color: var(--paper-grey-400);
+        background: none;
+      }
+      [holiday] {
+        color: var(--paper-red-800);
+      }
+    </style>
+    <div class='app-grid'>
+      <template is='dom-repeat' items="{{days}}">
+        <div><paper-button day on-tap="handleDaySelected" disabled$=[[item.disabled]] holiday$=[[item.holiday]] selected$=[[item.selected]]>[[item.day]]</paper-button>
+        </div>
+      </template>
+    </div>
+  </template>
+
+  <script>
+    /**
+     * `q-calendar`
+     * A Polymer 2.0 calendar component based on moment js
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class QCalendar extends QCalendarMixin(Polymer.Element) {
+      static get is() { return 'q-calendar'; }
+      static get properties() {
+        return {
+          holidays: Array,
+          disableWeekends: Boolean,
+          date: {
+            type: Object,
+            value: moment.utc().startOf('date'),
+            observer: 'dateChanged'
+          },
+          days: {
+            computed: "computeDays(month)"
+          }
+        }
+      }
+      dateChanged(e) {
+        this.month = moment.utc(this.date).startOf('month');
+      }
+      handleDaySelected(e) {
+        this.set('date', moment.utc(e.model.get('item.date')));
+        this.dispatchEvent(new CustomEvent('selected', {
+          bubbles: true,
+          composed: true,
+          detail: { 
+            date: e.model.get('item.date'), 
+            holiday: e.model.get('item.holiday')
+          }
+        }));
+      }
+      computeDays(m) {
+        let month = this.asMonth(m);
+        let numDays = month.daysInMonth();
+        let days = [];
+        let date = moment.utc(month).subtract(month.day() + 1, 'd').startOf('day');
+        for (let i = 0; i < month.day(); ++i) {
+          let d = moment.utc(date.add(1, 'd')).startOf('day');
+          days.push({ date: d, day: d.date(), previous: true });
+        }
+        for (let day = 0; day < numDays; ++day) {
+          let d = moment.utc(date.add(1, 'd')).startOf('day');
+          const holiday = this.isHoliday(d);
+          const selected = +moment.utc(this.date).startOf('day') == +d;
+          days.push({ date: d, day: d.date(), current: true, disabled: this.disableWeekends && this.isWeekend(d),holiday, selected });
+        }
+        for (let i = 1; i <= days.length % 7; ++i) {
+          let d = moment.utc(date.add(1, 'd')).startOf('day');
+          days.push({ date: d, day: d.date(), next: true });
+        }
+        return days;
+      }
+      isHoliday(day) {
+        if (this.holidays) {
+          let index = this.holidays.findIndex((h) => day.isSame(moment.utc(h.Date)));
+          if (index) {
+            return !!this.holidays[index];
+          }
+        }
+        return false;
+      }
+      isWeekend(day) {
+        return d.day() === 0 || d.day() === 6;
+      }
+    }
+
+    window.customElements.define(QCalendar.is, QCalendar);
+  </script>
+</dom-module>
